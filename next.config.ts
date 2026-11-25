@@ -26,16 +26,7 @@ const useApiProxy = process.env.NEXT_PUBLIC_USE_API_PROXY === "true";
 const nextConfig: NextConfig = {
   async rewrites() {
     if (!useApiProxy) return [];
-    return [
-      { source: "/api/accounts/:path*", destination: apiOrigin + "/:path*" },
-      // Keep OAuth paths unchanged so the backend flow cookie Path=/auth
-      // works on the frontend host, including the one-time exchange.
-      {
-        source: "/auth/oauth/:path*",
-        destination: apiOrigin + "/auth/oauth/:path*",
-      },
-      { source: "/auth/exchange", destination: apiOrigin + "/auth/exchange" },
-    ];
+    return [{ source: "/api/:path*", destination: apiOrigin + "/:path*" }];
   },
   poweredByHeader: false,
   async headers() {

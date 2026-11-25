@@ -5,8 +5,7 @@ const useApiProxy = process.env.NEXT_PUBLIC_USE_API_PROXY === "true";
 
 export function apiPath(path: string): string {
   if (!useApiProxy) return API_URL + path;
-  if (path.startsWith("/auth/oauth/") || path === "/auth/exchange") return path;
-  return "/api/accounts" + path;
+  return "/api" + path;
 }
 
 export class ApiError extends Error {

@@ -1,6 +1,14 @@
 export const API_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 ).replace(/\/$/, "");
+const useApiProxy = process.env.NEXT_PUBLIC_USE_API_PROXY === "true";
+
+export function apiPath(path: string): string {
+  if (!useApiProxy) return API_URL + path;
+  if (path.startsWith("/auth/oauth/") || path === "/auth/exchange") return path;
+  return "/api/accounts" + path;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -23,7 +31,7 @@ export async function request<T>(
   body?: unknown,
   token?: string | null,
 ): Promise<T> {
-  const response = await fetch(API_URL + path, {
+  const response = await fetch(apiPath(path), {
     method,
     credentials: "include",
     cache: "no-store",

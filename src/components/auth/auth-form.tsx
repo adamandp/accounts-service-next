@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/providers/auth-provider";
-import { API_URL, request } from "@/services/api";
+import { apiPath, request } from "@/services/api";
 import { errorMessage, validPassword } from "@/utils/format";
 import { toast } from "sonner";
 export function AuthForm({ register = false }: { register?: boolean }) {
@@ -141,7 +141,7 @@ export function AuthForm({ register = false }: { register?: boolean }) {
                   variant="outline"
                   onClick={() =>
                     window.location.assign(
-                      API_URL + "/auth/oauth/" + p + "/start",
+                      apiPath("/auth/oauth/" + p + "/start"),
                     )
                   }
                   disabled={busy || auth.loading}

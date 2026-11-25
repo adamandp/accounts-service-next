@@ -29,6 +29,9 @@ export async function request<T>(
     cache: "no-store",
     headers: {
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(!["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase())
+        ? { "X-Accounts-CSRF": "1" }
+        : {}),
       ...(token ? { Authorization: "Bearer " + token } : {}),
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),

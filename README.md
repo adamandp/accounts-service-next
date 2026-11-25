@@ -20,3 +20,7 @@ Frontend permissions are presentation/route guards only; the backend enforces au
 npm run lint
 npm run typecheck
 npm run build
+
+## Browser security
+
+Responses enforce CSP, frame blocking, MIME sniffing protection, a no-referrer policy, and restricted browser permissions. CSP retains inline scripts/styles for Next.js prerendering and Radix; strict nonce-based CSP requires a rendering redesign. Production does not allow unsafe-eval. Mutation requests send X-Accounts-CSRF for the backend cookie protection. Serve the frontend and API over HTTPS, preferably under the same site.

@@ -1,23 +1,191 @@
 "use client";
-import {useEffect} from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import {usePathname,useRouter} from "next/navigation";
-import {useTheme} from "next-themes";
-import {ShieldCheck,LayoutDashboard,Users,Shield,KeyRound,UserRound,Lock,MonitorSmartphone,LogOut,SunMoon} from "lucide-react";
-import {SidebarProvider,Sidebar,SidebarHeader,SidebarContent,SidebarGroup,SidebarGroupLabel,SidebarMenu,SidebarMenuItem,SidebarMenuButton,SidebarFooter,SidebarInset,SidebarTrigger} from "@/components/ui/sidebar";
-import {Button} from "@/components/ui/button";
-import {useAuth} from "@/providers/auth-provider";
-import {toast} from "sonner";
-import {errorMessage} from "@/utils/format";
-const management=[{title:"Overview",href:"/overview",icon:LayoutDashboard,permission:null},{title:"Users",href:"/users",icon:Users,permission:"user.read"},{title:"Roles",href:"/roles",icon:Shield,permission:"role.read"},{title:"Permissions",href:"/permissions",icon:KeyRound,permission:"permission.read"}];
-const account=[{title:"My Profile",href:"/account/profile",icon:UserRound,permission:null},{title:"Password & Security",href:"/account/security",icon:Lock,permission:null},{title:"Sessions",href:"/account/sessions",icon:MonitorSmartphone,permission:null}];
-export function Dashboard({children}:{children:React.ReactNode}){const auth=useAuth(),router=useRouter(),path=usePathname(),{resolvedTheme,setTheme}=useTheme();
- useEffect(()=>{if(auth.loading||auth.error)return;if(!auth.user)router.replace("/login");else if(auth.user.mustChangePassword)router.replace("/change-password");else if(path==="/overview"&&!management.slice(1).some(n=>n.permission&&auth.has(n.permission)))router.replace("/account/profile");},[auth,router,path]);
- if(auth.loading)return <main className="grid min-h-svh place-items-center text-muted-foreground">Loading account…</main>;
- if(auth.error)return <main className="grid min-h-svh place-items-center"><div className="space-y-4 text-center"><p>{auth.error}</p><Button onClick={()=>window.location.reload()}>Retry</Button></div></main>;
- if(!auth.user||auth.user.mustChangePassword)return null;
- const required=management.find(n=>path===n.href||path.startsWith(n.href+"/"))?.permission;
- const menu=(items:typeof management)=>items.filter(n=>!n.permission||auth.has(n.permission)).map(n=><SidebarMenuItem key={n.href}><SidebarMenuButton asChild isActive={path===n.href||path.startsWith(n.href+"/")} tooltip={n.title}><Link href={n.href}><n.icon/><span>{n.title}</span></Link></SidebarMenuButton></SidebarMenuItem>);
- return <SidebarProvider><Sidebar collapsible="icon"><SidebarHeader><SidebarMenu><SidebarMenuItem><SidebarMenuButton size="lg" asChild><Link href="/overview"><span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><ShieldCheck className="size-4"/></span><span className="grid text-left"><span className="font-semibold">Accounts Service</span><span className="text-xs text-muted-foreground">Identity & Access</span></span></Link></SidebarMenuButton></SidebarMenuItem></SidebarMenu></SidebarHeader><SidebarContent>{management.slice(1).some(n=>n.permission&&auth.has(n.permission))&&<SidebarGroup><SidebarGroupLabel>Management</SidebarGroupLabel><SidebarMenu>{menu(management)}</SidebarMenu></SidebarGroup>}<SidebarGroup><SidebarGroupLabel>Account</SidebarGroupLabel><SidebarMenu>{menu(account)}</SidebarMenu></SidebarGroup></SidebarContent><SidebarFooter><SidebarMenu><SidebarMenuItem><SidebarMenuButton tooltip="Sign out" onClick={()=>auth.logout().then(()=>router.replace("/login")).catch(e=>toast.error(errorMessage(e)))}><LogOut/><span>Sign out</span></SidebarMenuButton></SidebarMenuItem></SidebarMenu><div className="truncate px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">{auth.user.name||auth.user.username||auth.user.email} · {auth.user.role}</div></SidebarFooter></Sidebar><SidebarInset><header className="flex h-14 items-center gap-3 border-b px-4"><SidebarTrigger/><span className="text-sm font-medium">{[...management,...account].find(n=>path===n.href||path.startsWith(n.href+"/"))?.title||"Account"}</span><Button className="ml-auto" size="icon" variant="ghost" aria-label="Toggle theme" onClick={()=>setTheme(resolvedTheme==="dark"?"light":"dark")}><SunMoon/></Button></header><main className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">{required&&!auth.has(required)?<div><h1 className="text-xl font-semibold">Access forbidden</h1><p className="text-muted-foreground">You do not have permission to view this page.</p></div>:children}</main></SidebarInset></SidebarProvider>;
+import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import {
+  ShieldCheck,
+  LayoutDashboard,
+  Users,
+  Shield,
+  KeyRound,
+  UserRound,
+  Lock,
+  MonitorSmartphone,
+  LogOut,
+  SunMoon,
+} from "lucide-react";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/providers/auth-provider";
+import { toast } from "sonner";
+import { errorMessage } from "@/utils/format";
+const management = [
+  {
+    title: "Overview",
+    href: "/overview",
+    icon: LayoutDashboard,
+    permission: null,
+  },
+  { title: "Users", href: "/users", icon: Users, permission: "user.read" },
+  { title: "Roles", href: "/roles", icon: Shield, permission: "role.read" },
+  {
+    title: "Permissions",
+    href: "/permissions",
+    icon: KeyRound,
+    permission: "permission.read",
+  },
+];
+const account = [
+  {
+    title: "My Profile",
+    href: "/account/profile",
+    icon: UserRound,
+    permission: null,
+  },
+  {
+    title: "Password & Security",
+    href: "/account/security",
+    icon: Lock,
+    permission: null,
+  },
+  {
+    title: "Sessions",
+    href: "/account/sessions",
+    icon: MonitorSmartphone,
+    permission: null,
+  },
+];
+export function Dashboard({ children }: { children: React.ReactNode }) {
+  const auth = useAuth(),
+    router = useRouter(),
+    path = usePathname(),
+    { resolvedTheme, setTheme } = useTheme();
+  useEffect(() => {
+    if (auth.loading || auth.error) return;
+    if (!auth.user) router.replace("/login");
+    else if (auth.user.mustChangePassword) router.replace("/change-password");
+    else if (
+      path === "/overview" &&
+      !management.slice(1).some((n) => n.permission && auth.has(n.permission))
+    )
+      router.replace("/account/profile");
+  }, [auth, router, path]);
+  if (auth.loading || auth.error || !auth.user || auth.user.mustChangePassword)
+    return <>{children}</>;
+  const menu = (items: typeof management) =>
+    items
+      .filter((n) => !n.permission || auth.has(n.permission))
+      .map((n) => (
+        <SidebarMenuItem key={n.href}>
+          <SidebarMenuButton
+            asChild
+            isActive={path === n.href || path.startsWith(n.href + "/")}
+            tooltip={n.title}
+          >
+            <Link href={n.href}>
+              <n.icon />
+              <span>{n.title}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ));
+  return (
+    <SidebarProvider>
+      <Sidebar collapsible="icon">
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <Link href="/overview">
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <ShieldCheck className="size-4" />
+                  </span>
+                  <span className="grid text-left">
+                    <span className="font-semibold">Accounts Service</span>
+                    <span className="text-xs text-muted-foreground">
+                      Identity & Access
+                    </span>
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          {management
+            .slice(1)
+            .some((n) => n.permission && auth.has(n.permission)) && (
+            <SidebarGroup>
+              <SidebarGroupLabel>Management</SidebarGroupLabel>
+              <SidebarMenu>{menu(management)}</SidebarMenu>
+            </SidebarGroup>
+          )}
+          <SidebarGroup>
+            <SidebarGroupLabel>Account</SidebarGroupLabel>
+            <SidebarMenu>{menu(account)}</SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Sign out"
+                onClick={() =>
+                  auth
+                    .logout()
+                    .then(() => router.replace("/login"))
+                    .catch((e) => toast.error(errorMessage(e)))
+                }
+              >
+                <LogOut />
+                <span>Sign out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          <div className="truncate px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            {auth.user.name || auth.user.username || auth.user.email} ·{" "}
+            {auth.user.role}
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-14 items-center gap-3 border-b px-4">
+          <SidebarTrigger />
+          <span className="text-sm font-medium">
+            {[...management, ...account].find(
+              (n) => path === n.href || path.startsWith(n.href + "/"),
+            )?.title || "Account"}
+          </span>
+          <Button
+            className="ml-auto"
+            size="icon"
+            variant="ghost"
+            aria-label="Toggle theme"
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
+          >
+            <SunMoon />
+          </Button>
+        </header>
+        <main className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }
-

@@ -15,7 +15,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { KeyRound } from "lucide-react";
+import { Laptop, Smartphone, Tablet, MonitorSmartphone } from "lucide-react";
+import { sessionDevice } from "@/utils/session-device";
 import type { Session } from "@/types/accounts";
 import { date } from "@/utils/format";
 function SessionsContent() {
@@ -45,49 +46,76 @@ function SessionsContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {q.data?.map((s) => (
-              <div
-                key={s.id}
-                className="flex flex-wrap items-start justify-between gap-4 rounded-lg border p-4"
-              >
-                <div className="flex min-w-0 items-start gap-3">
-                  <KeyRound className="mt-1 size-5 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">
-                        {s.isCurrent ? "Current session" : "Other session"}
-                      </p>
-                      {s.isCurrent && (
-                        <Badge variant="secondary">Current</Badge>
-                      )}
+            {[...(q.data ?? [])]
+              .sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent))
+              .map((s) => {
+                const device = sessionDevice(s.userAgent);
+                const DeviceIcon =
+                  device.kind === "desktop"
+                    ? Laptop
+                    : device.kind === "mobile"
+                      ? Smartphone
+                      : device.kind === "tablet"
+                        ? Tablet
+                        : MonitorSmartphone;
+                return (
+                  <div
+                    key={s.id}
+                    className="flex flex-wrap items-start justify-between gap-3 rounded-lg border p-4"
+                  >
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <DeviceIcon className="size-5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0 space-y-2">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium">{device.name}</p>
+                            {s.isCurrent && (
+                              <Badge
+                                variant="secondary"
+                                className="gap-1 text-emerald-600 dark:text-emerald-400"
+                              >
+                                <span className="size-1.5 rounded-full bg-current" />
+                                This device
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {device.browser ?? "Browser unavailable"}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Last active: {date(s.lastUsedAt)}
+                        </p>
+                        <details className="text-xs text-muted-foreground">
+                          <summary className="w-fit cursor-pointer hover:text-foreground">
+                            Session details
+                          </summary>
+                          <div className="mt-2 space-y-1">
+                            <p>Signed in: {date(s.createdAt)}</p>
+                            <p>Expires: {date(s.expiresAt)}</p>
+                            <p className="break-all font-mono">ID: {s.id}</p>
+                          </div>
+                        </details>
+                      </div>
                     </div>
-                    <p className="break-all font-mono text-xs text-muted-foreground">
-                      {s.id}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Created: {date(s.createdAt)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Last used: {date(s.lastUsedAt)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Expires: {date(s.expiresAt)}
-                    </p>
+                    {!s.isCurrent && (
+                      <ConfirmAction
+                        label="Revoke"
+                        title="Revoke this session?"
+                        description="The session will lose access to your account."
+                        onConfirm={async () => {
+                          await api("/sessions/" + s.id, "DELETE");
+                          await qc.invalidateQueries({
+                            queryKey: ["sessions"],
+                          });
+                        }}
+                      />
+                    )}
                   </div>
-                </div>
-                {!s.isCurrent && (
-                  <ConfirmAction
-                    label="Revoke"
-                    title="Revoke this session?"
-                    description="The session will lose access to your account."
-                    onConfirm={async () => {
-                      await api("/sessions/" + s.id, "DELETE");
-                      await qc.invalidateQueries({ queryKey: ["sessions"] });
-                    }}
-                  />
-                )}
-              </div>
-            ))}
+                );
+              })}
             {!q.data?.length && (
               <p className="text-sm text-muted-foreground">
                 No active sessions.

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -30,6 +30,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/layout/user-avatar";
 import { useAuth } from "@/providers/auth-provider";
 import { toast } from "sonner";
 import { errorMessage } from "@/utils/format";
@@ -86,6 +87,27 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
   }, [auth, router, path]);
   if (auth.loading || auth.error || !auth.user || auth.user.mustChangePassword)
     return <>{children}</>;
+  function navigateSidebar(event: KeyboardEvent<HTMLDivElement>) {
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
+      return;
+    const links = Array.from(
+      event.currentTarget.querySelectorAll<HTMLAnchorElement>(
+        "a[data-sidebar-nav]",
+      ),
+    );
+    const index = links.indexOf(event.target as HTMLAnchorElement);
+    if (index < 0) return;
+    event.preventDefault();
+    const next =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? links.length - 1
+          : (index + (event.key === "ArrowDown" ? 1 : -1) + links.length) %
+            links.length;
+    links[next]?.focus();
+  }
   const menu = (items: typeof management) =>
     items
       .filter((n) => !n.permission || auth.has(n.permission))
@@ -96,7 +118,15 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
             isActive={path === n.href || path.startsWith(n.href + "/")}
             tooltip={n.title}
           >
-            <Link href={n.href}>
+            <Link
+              href={n.href}
+              data-sidebar-nav=""
+              aria-current={
+                path === n.href || path.startsWith(n.href + "/")
+                  ? "page"
+                  : undefined
+              }
+            >
               <n.icon />
               <span>{n.title}</span>
             </Link>
@@ -109,14 +139,20 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
-                <Link href="/overview">
-                  <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <SidebarMenuButton size="lg" asChild tooltip="Accounts Service">
+                <Link
+                  href="/overview"
+                  aria-label="Accounts Service"
+                  className="group-data-[collapsible=icon]:justify-center"
+                >
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <ShieldCheck className="size-4" />
                   </span>
-                  <span className="grid text-left">
-                    <span className="font-semibold">Accounts Service</span>
-                    <span className="text-xs text-muted-foreground">
+                  <span className="grid min-w-0 text-left group-data-[collapsible=icon]:hidden">
+                    <span className="truncate font-semibold">
+                      Accounts Service
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
                       Identity & Access
                     </span>
                   </span>
@@ -125,7 +161,7 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent onKeyDown={navigateSidebar}>
           {management
             .slice(1)
             .some((n) => n.permission && auth.has(n.permission)) && (
@@ -156,9 +192,27 @@ export function Dashboard({ children }: { children: React.ReactNode }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <div className="truncate px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            {auth.user.name || auth.user.username || auth.user.email} ·{" "}
-            {auth.user.role}
+          <div className="flex min-w-0 items-center gap-2 border-t border-sidebar-border pt-2 px-1 pb-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:pb-0">
+            <UserAvatar user={auth.user} />
+            <Link
+              href="/account/profile"
+              className="min-w-0 flex-1 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:hidden"
+            >
+              <p className="truncate text-sm font-medium">
+                {auth.user.name ||
+                  auth.user.username ||
+                  auth.user.email ||
+                  "Account"}
+              </p>
+              {auth.user.email && (
+                <p className="truncate text-xs text-muted-foreground">
+                  {auth.user.email}
+                </p>
+              )}
+              <p className="truncate text-xs text-muted-foreground">
+                {auth.user.role}
+              </p>
+            </Link>
           </div>
         </SidebarFooter>
       </Sidebar>

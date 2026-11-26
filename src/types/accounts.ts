@@ -35,5 +35,6 @@ export type Session = {
   lastUsedAt: string;
   expiresAt: string;
   isCurrent: boolean;
+  userAgent?: string | null;
 };
 export type Health = { status: string; connection?: string };

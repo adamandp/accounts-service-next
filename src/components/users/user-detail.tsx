@@ -138,13 +138,23 @@ export function UserDetail({ id }: { id: string }) {
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
                   <Select value={role || u.roleId} onValueChange={setRole}>
-                    <SelectTrigger className="w-full sm:w-60">
-                      <SelectValue placeholder="Choose a role" />
+                    <SelectTrigger className="min-w-0 w-full sm:w-72">
+                      <SelectValue placeholder="Choose a role">
+                        {roles.data?.find((r) => r.id === (role || u.roleId))
+                          ?.name ?? u.role}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {roles.data?.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          {r.name} ({r.code})
+                        <SelectItem key={r.id} value={r.id} textValue={r.name}>
+                          <span className="grid min-w-0 gap-0.5">
+                            <span className="font-medium whitespace-normal">
+                              {r.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground break-all">
+                              {r.code}
+                            </span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

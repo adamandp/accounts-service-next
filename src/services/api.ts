@@ -5,7 +5,7 @@ const useApiProxy = process.env.NEXT_PUBLIC_USE_API_PROXY === "true";
 
 export function apiPath(path: string): string {
   if (!useApiProxy) return API_URL + path;
-  return "/api" + path;
+  return (process.env.NEXT_PUBLIC_BASE_PATH ?? "") + "/api" + path;
 }
 
 export class ApiError extends Error {

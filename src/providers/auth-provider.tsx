@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (initialized.current) return;
     initialized.current = true;
     // OAuth uses a one-time code; do not rotate an unrelated cookie on callback.
-    if (window.location.pathname === "/auth/callback") {
+    if (window.location.pathname === (process.env.NEXT_PUBLIC_BASE_PATH ?? "") + "/auth/callback") {
       queueMicrotask(() => setLoading(false));
       return;
     }

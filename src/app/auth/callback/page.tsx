@@ -14,7 +14,7 @@ export default function Callback() {
     started.current = true;
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    window.history.replaceState(null, "", "/auth/callback");
+    window.history.replaceState(null, "", window.location.pathname);
     if (!code) {
       queueMicrotask(() => setError("Sign-in was cancelled or failed."));
       return;

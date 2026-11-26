@@ -21,9 +21,11 @@ const csp = [
   "form-action 'self'",
 ].join("; ");
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const useApiProxy = process.env.NEXT_PUBLIC_USE_API_PROXY === "true";
 
 const nextConfig: NextConfig = {
+  basePath,
   async rewrites() {
     if (!useApiProxy) return [];
     return [{ source: "/api/:path*", destination: apiOrigin + "/:path*" }];
